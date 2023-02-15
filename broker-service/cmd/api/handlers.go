@@ -12,6 +12,14 @@ type RequestPayload struct {
 	Auth   AuthPayload   `json:"auth,omitempty"`
 	Log    LogPayload    `json:"log,omitempty"`
 	Prompt OpenAIPayload `json:"prompt,omitempty"`
+	Mail   MailPayload   `json:"mail,omitempty"`
+}
+
+type MailPayload struct {
+	From    string `json:"from"`
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Message string `json:"message"`
 }
 
 type AuthPayload struct {
@@ -53,9 +61,45 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 		app.logItem(w, requestPayload.Log)
 	case "prompt":
 		app.sendPrompt(w, requestPayload.Prompt)
+	case "mail":
+		app.sendMail(w, requestPayload.Mail)
 	default:
 		app.errorJson(w, errors.New("unknown action"))
 	}
+}
+
+func (app *Config) sendMail(w http.ResponseWriter, msg MailPayload) {
+	jsonData, _ := json.MarshalIndent(msg, "", "\t")
+
+	mailServiceURL := "http://mail-service/send"
+
+	request, err := http.NewRequest("POST", mailServiceURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		app.errorJson(w, err)
+		return
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+	if err != nil {
+		app.errorJson(w, err)
+		return
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusAccepted {
+		app.errorJson(w, errors.New("mail service error"))
+		return
+	}
+
+	var payload jsonResponse
+	payload.Error = false
+	payload.Message = "Mail sent successfully to " + msg.To
+
+	app.writeJson(w, http.StatusAccepted, payload)
 }
 
 func (app *Config) sendPrompt(w http.ResponseWriter, entry OpenAIPayload) {
