@@ -3,6 +3,7 @@
 /front-end/frontApp
 
 /broker-service/brokerApp
+/logger-service/loggerServiceApp
 
 /authentication-service/authApp
 /project/db-data/mongo/

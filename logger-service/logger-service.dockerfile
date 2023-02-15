@@ -2,7 +2,7 @@ FROM alpine:latest
 
 RUN mkdir /app
 
-COPY brokerApp /app
+COPY loggerServiceApp /app
 
-CMD [ "/app/brokerApp" ]
+CMD [ "/app/loggerServiceApp" ]
 
