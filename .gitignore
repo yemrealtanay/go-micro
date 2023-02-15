@@ -4,6 +4,7 @@
 
 /broker-service/brokerApp
 /logger-service/loggerServiceApp
+/openai-service/openAIServiceApp
 
 /authentication-service/authApp
 /project/db-data/mongo/
