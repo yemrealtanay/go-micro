@@ -8,9 +8,10 @@ import (
 )
 
 type RequestPayload struct {
-	Action string      `json:"action"`
-	Auth   AuthPayload `json:"auth,omitempty"`
-	Log    LogPayload  `json:"log,omitempty"`
+	Action string        `json:"action"`
+	Auth   AuthPayload   `json:"auth,omitempty"`
+	Log    LogPayload    `json:"log,omitempty"`
+	Prompt OpenAIPayload `json:"prompt,omitempty"`
 }
 
 type AuthPayload struct {
@@ -21,6 +22,10 @@ type AuthPayload struct {
 type LogPayload struct {
 	Name string `json:"name"`
 	Data string `json:"data"`
+}
+
+type OpenAIPayload struct {
+	Prompt string `json:"prompt"`
 }
 
 func (app *Config) Broker(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +51,54 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 		app.authenticate(w, requestPayload.Auth)
 	case "log":
 		app.logItem(w, requestPayload.Log)
+	case "prompt":
+		app.sendPrompt(w, requestPayload.Prompt)
 	default:
 		app.errorJson(w, errors.New("unknown action"))
 	}
+}
+
+func (app *Config) sendPrompt(w http.ResponseWriter, entry OpenAIPayload) {
+	jsonData, _ := json.MarshalIndent(entry, "", "\t")
+
+	openAIServiceURL := "http://openai-service/openAI"
+
+	request, err := http.NewRequest("POST", openAIServiceURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		app.errorJson(w, err)
+		return
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+	if err != nil {
+		app.errorJson(w, err)
+		return
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusAccepted {
+		app.errorJson(w, err)
+		return
+	}
+	var jsonFromService jsonResponse
+
+	err = json.NewDecoder(response.Body).Decode(&jsonFromService)
+	if err != nil {
+		app.errorJson(w, err)
+		return
+	}
+
+	var payload jsonResponse
+	payload.Error = false
+	payload.Message = "Open AI response Successfull"
+	payload.Data = jsonFromService.Data
+
+	app.writeJson(w, http.StatusAccepted, payload)
+
 }
 
 func (app *Config) logItem(w http.ResponseWriter, entry LogPayload) {
@@ -61,7 +111,7 @@ func (app *Config) logItem(w http.ResponseWriter, entry LogPayload) {
 		app.errorJson(w, err)
 		return
 	}
-	request.Header.Set("Content-Type", "qpplication/json")
+	request.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 

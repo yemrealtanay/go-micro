@@ -7,3 +7,5 @@
 
 /authentication-service/authApp
 /project/db-data/mongo/
+/openai-service/.env
+/project/docker-compose.yml

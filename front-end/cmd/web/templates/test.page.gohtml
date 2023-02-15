@@ -9,6 +9,7 @@
                 <a id="brokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Broker</a>
                 <a id="authBrokerBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Auth</a>
                 <a id="logBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test Logger</a>
+                <a id="openAIBtn" class="btn btn-outline-secondary" href="javascript:void(0);">Test OpenAI</a>
 
                 <div id="output" class="mt-5" style="outline: 1px solid silver; padding: 2em;">
                     <span class="text-muted">Output shows here...</span>
@@ -37,6 +38,7 @@
         let brokerBtn = document.getElementById("brokerBtn");
         let authBrokerBtn = document.getElementById("authBrokerBtn");
         let logBtn = document.getElementById("logBtn");
+        let openaiBtn = document.getElementById("openAIBtn")
         let output = document.getElementById("output");
         let sent = document.getElementById("payload");
         let received = document.getElementById("received");
@@ -120,6 +122,38 @@
                         output.innerHTML += `<br><strong>Error: </strong>: ${data.message}`;
                     }else {
                         output.innerHTML += `<br><strong>Response from logger service</strong>: ${data.message}`;
+                    }
+                })
+                .catch((error) => {
+                    output.innerHTML += "<br><br>Error: " + error;
+                });
+        });
+
+        openaiBtn.addEventListener("click", function() {
+            const payload = {
+                action: "prompt",
+                prompt: {
+                    prompt: "2, 3, 5, 7, 11,",
+                }
+            }
+
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json")
+
+            const body = {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: headers
+            }
+
+            fetch("http:\/\/localhost:8080/handle", body).then((response) => response.json())
+                .then((data) => {
+                    sent.innerHTML = JSON.stringify(payload, undefined, 4);
+                    received.innerHTML = JSON.stringify(data, undefined, 4);
+                    if(data.error){
+                        output.innerHTML += `<br><strong>Error: </strong>: ${data.message}`;
+                    }else {
+                        output.innerHTML += `<br><strong>Response from openai service</strong>: ${data.message}`;
                     }
                 })
                 .catch((error) => {
