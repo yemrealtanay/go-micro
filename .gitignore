@@ -6,6 +6,7 @@
 /logger-service/loggerServiceApp
 /openai-service/openAIServiceApp
 /mail-service/mailerApp
+/listener-service/listenerApp
 
 /authentication-service/authApp
 /project/db-data/mongo/
